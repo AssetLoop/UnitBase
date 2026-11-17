@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="id" translate="no" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="google" content="notranslate">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <title id="pageTitle">Login Portal | ERP System</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } }
+    };
+  </script>
+  <style>
+    :root { color-scheme: light only !important; }
+    html, body { background-color: #f8fafc !important; color: #0f172a !important; }
+    input::-ms-reveal, input::-ms-clear { display: none; }
+    @keyframes shrinkBar { from { width: 100%; } to { width: 0%; } }
+    .toast-progress { animation: shrinkBar 3s linear forwards; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
+
+  <!-- BLOCKING AUTH GATE LOADER -->
+  <div id="splashScreen" class="fixed inset-0 z-[100] bg-slate-50 flex flex-col items-center justify-center transition-opacity duration-200">
+    <div class="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+    <p class="mt-4 text-xs font-semibold text-slate-600 tracking-wide">Memverifikasi Sesi Keamanan...</p>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastContainer" class="fixed top-4 right-4 left-4 sm:left-auto sm:w-96 z-[90] pointer-events-none transition-all duration-300 opacity-0 -translate-y-3">
+    <div id="toastCard" class="pointer-events-auto rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+      <div class="p-3.5 flex items-start gap-3">
+        <div id="toastIcon" class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold bg-blue-100 text-blue-700">i</div>
+        <div class="flex-1 min-w-0">
+          <p id="toastTitle" class="text-xs font-bold text-slate-900">Pemberitahuan</p>
+          <p id="toastMessage" class="text-xs text-slate-600 mt-0.5 leading-relaxed"></p>
+        </div>
+        <button type="button" onclick="hideToast()" class="text-slate-400 hover:text-slate-600 text-base font-bold px-1 leading-none">&times;</button>
+      </div>
+      <div class="h-1 w-full bg-slate-100"><div id="toastBar" class="h-full bg-blue-600"></div></div>
+    </div>
+  </div>
+
+  <!-- AUTHENTICATION PORTAL -->
+  <main id="authView" class="hidden min-h-screen flex flex-col justify-center items-center px-4 py-8 sm:px-6 lg:px-8">
+    <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      
+      <!-- Brand Header -->
+      <div class="px-6 pt-7 pb-5 border-b border-slate-100 text-center bg-white">
+        <div id="loginLogoContainer" class="mx-auto w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-sm mb-3 overflow-hidden">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <h1 id="brandTitle" class="text-xl font-bold text-slate-900 tracking-tight">Helmy Machinery</h1>
+        <p id="brandSubtitle" class="text-xs text-slate-500 mt-1">Sistem ERP Inventaris, Pembelian & Supplier</p>
+      </div>
+
+      <!-- Mode Switcher Tabs -->
+      <div class="grid grid-cols-3 bg-slate-50 border-b border-slate-200 text-xs font-semibold">
+        <button type="button" onclick="switchTab('login')" id="tab-login" class="py-3 text-center border-b-2 border-blue-600 text-blue-600 bg-white transition">Masuk</button>
+        <button type="button" onclick="switchTab('activate')" id="tab-activate" class="py-3 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition">Aktivasi</button>
+        <button type="button" onclick="switchTab('reset')" id="tab-reset" class="py-3 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition">Reset Sandi</button>
+      </div>
+
+      <!-- TAB 1: LOGIN FORM -->
+      <form id="form-login" onsubmit="handleLoginSubmit(event)" class="p-6 space-y-4">
+        <div>
+          <label for="loginEmail" class="block text-xs font-semibold text-slate-700 mb-1.5">Email Kerja</label>
+          <input type="email" id="loginEmail" required autocomplete="email" placeholder="nama@perusahaan.com" class="w-full h-11 px-3.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label for="loginPassword" class="block text-xs font-semibold text-slate-700 mb-1.5">Kata Sandi</label>
+          <div class="relative">
+            <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Masukkan kata sandi Anda" class="w-full h-11 pl-3.5 pr-11 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="button" tabindex="-1" onclick="togglePasswordVisibility('loginPassword', this)" class="absolute inset-y-0 right-0 px-3.5 flex items-center text-slate-400 hover:text-slate-600 transition">
+              <svg class="w-4 h-4 eye-open" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+              <svg class="w-4 h-4 eye-closed hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" id="btnLogin" class="w-full h-11 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-semibold rounded-xl shadow-sm transition">Masuk ke Sistem</button>
+      </form>
+
+      <!-- TAB 2: FIRST-TIME ACCOUNT ACTIVATION -->
+      <div id="form-activate" class="hidden p-6 space-y-4">
+        <form id="activateStep1" onsubmit="handleCheckEmailSubmit(event)" class="space-y-4">
+          <div class="p-3 rounded-xl bg-blue-50 border border-blue-100 text-xs text-blue-800 leading-relaxed">
+            Masukkan email kerja yang telah didaftarkan oleh Administrator untuk membuat kata sandi pertama kali.
+          </div>
+          <div>
+            <label for="activateEmail" class="block text-xs font-semibold text-slate-700 mb-1.5">Email Terdaftar</label>
+            <input type="email" id="activateEmail" required placeholder="nama@perusahaan.com" class="w-full h-11 px-3.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <button type="submit" id="btnCheckEmail" class="w-full h-11 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white text-sm font-semibold rounded-xl shadow-sm transition">Verifikasi Email</button>
+        </form>
+
+        <form id="activateStep2" onsubmit="handleSetupPasswordSubmit(event)" class="hidden space-y-4">
+          <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs space-y-1">
+            <p class="font-bold text-emerald-900" id="activateUserName">-</p>
+            <p class="text-emerald-700">Role: <span id="activateUserRole" class="font-semibold">-</span></p>
+          </div>
+          <div>
+            <label for="activatePassword" class="block text-xs font-semibold text-slate-700 mb-1.5">Buat Kata Sandi Baru (Min. 8 Karakter)</label>
+            <div class="relative">
+              <input type="password" id="activatePassword" required minlength="8" autocomplete="new-password" placeholder="Minimal 8 karakter" class="w-full h-11 pl-3.5 pr-11 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <button type="button" tabindex="-1" onclick="togglePasswordVisibility('activatePassword', this)" class="absolute inset-y-0 right-0 px-3.5 flex items-center text-slate-400 hover:text-slate-600 transition">
+                <svg class="w-4 h-4 eye-open" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                <svg class="w-4 h-4 eye-closed hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+              </button>
+            </div>
+          </div>
+          <div>
+            <label for="activateConfirmPassword" class="block text-xs font-semibold text-slate-700 mb-1.5">Konfirmasi Kata Sandi</label>
+            <input type="password" id="activateConfirmPassword" required minlength="8" autocomplete="new-password" placeholder="Ulangi kata sandi baru" class="w-full h-11 px-3.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="flex gap-2">
+            <button type="button" onclick="resetActivateForm()" class="px-4 h-11 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-50 transition">Ganti Email</button>
+            <button type="submit" id="btnSetupPassword" class="flex-1 h-11 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-semibold rounded-xl shadow-sm transition">Aktifkan Akun</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- TAB 3: OTP PASSWORD RESET -->
+      <div id="form-reset" class="hidden p-6 space-y-4">
+        <form id="resetStep1" onsubmit="handleRequestOtpSubmit(event)" class="space-y-4">
+          <div class="p-3 rounded-xl bg-amber-50 border border-amber-100 text-xs text-amber-800 leading-relaxed">
+            Kode OTP 6-digit akan dikirimkan ke email kerja Anda dan berlaku selama 15 menit.
+          </div>
+          <div>
+            <label for="resetEmail" class="block text-xs font-semibold text-slate-700 mb-1.5">Email Akun</label>
+            <input type="email" id="resetEmail" required placeholder="nama@perusahaan.com" class="w-full h-11 px-3.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <button type="submit" id="btnRequestOtp" class="w-full h-11 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white text-sm font-semibold rounded-xl shadow-sm transition">Kirim Kode OTP</button>
+        </form>
+
+        <form id="resetStep2" onsubmit="handleVerifyResetSubmit(event)" class="hidden space-y-4">
+          <div class="p-3 rounded-xl bg-blue-50 border border-blue-100 text-xs text-blue-800">
+            OTP terkirim ke <strong id="resetEmailDisplay">-</strong>
+          </div>
+          <div>
+            <label for="resetOtpCode" class="block text-xs font-semibold text-slate-700 mb-1.5">Kode OTP 6-Digit</label>
+            <input type="text" id="resetOtpCode" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" placeholder="000000" class="w-full h-11 px-3.5 rounded-xl border border-slate-300 bg-white text-center font-mono text-base tracking-[0.35em] font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label for="resetNewPassword" class="block text-xs font-semibold text-slate-700 mb-1.5">Kata Sandi Baru (Min. 8 Karakter)</label>
+            <input type="password" id="resetNewPassword" required minlength="8" autocomplete="new-password" placeholder="Minimal 8 karakter" class="w-full h-11 px-3.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label for="resetConfirmPassword" class="block text-xs font-semibold text-slate-700 mb-1.5">Konfirmasi Kata Sandi Baru</label>
+            <input type="password" id="resetConfirmPassword" required minlength="8" autocomplete="new-password" placeholder="Ulangi kata sandi baru" class="w-full h-11 px-3.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="flex gap-2">
+            <button type="button" onclick="resetForgotForm()" class="px-4 h-11 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-50 transition">Ulangi</button>
+            <button type="submit" id="btnVerifyReset" class="flex-1 h-11 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-semibold rounded-xl shadow-sm transition">Simpan Kata Sandi</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+        <span>HMAC-SHA256 Protected</span>
+        <span>Auth Gateway v2.0</span>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzLEzHuoS8SScxmnfXHBGPzSkSvtLoFWjKNQaGQWktwqSx0weIttE-zo80OJPMFrU6e5Q/exec";
+    const DASHBOARD_PAGE = "dashboard.html";
+    const STORAGE_KEYS = {
+      TOKEN: "hm_session_token",
+      EMAIL: "hm_user_email",
+      EXPIRES: "hm_session_expires",
+      USER: "hm_user_profile",
+      CONFIG: "hm_public_config"
+    };
+
+    const DEFAULT_LOGIN_LOGO_SVG = `<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`;
+
+    let verifiedActivateEmail = "";
+    let verifiedResetEmail = "";
+    let toastTimer = null;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      hydrateCachedConfig();
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("reason") === "expired") {
+        clearSessionStorage();
+        showAuthPortal();
+        showToast("Sesi Berakhir", "Silakan masuk kembali untuk melanjutkan.", "warning");
+        window.history.replaceState({}, document.title, window.location.pathname);
+        loadPublicConfig();
+        return;
+      }
+
+      await verifyExistingSessionOrShowLogin();
+      loadPublicConfig();
+    });
+
+    async function callApi(payload) {
+      const response = await fetch(GAS_WEB_APP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      return await response.json();
+    }
+
+    function resetLoginLogoToDefault(logoBox) {
+      if (!logoBox) return;
+      logoBox.className = "mx-auto w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-sm mb-3 overflow-hidden";
+      logoBox.innerHTML = DEFAULT_LOGIN_LOGO_SVG;
+    }
+
+    function hydrateCachedConfig() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.CONFIG);
+        if (!raw) return;
+        const cfg = JSON.parse(raw);
+
+        if (cfg.appName) {
+          document.getElementById("brandTitle").textContent = cfg.appName;
+          document.getElementById("pageTitle").textContent = "Login | " + cfg.appName;
+        }
+        if (cfg.appSubtitle) {
+          document.getElementById("brandSubtitle").textContent = cfg.appSubtitle;
+        }
+
+        const logoBox = document.getElementById("loginLogoContainer");
+        if (logoBox) {
+          const rawLogo = String(cfg.appLogoUrl || "").trim();
+          if (rawLogo) {
+            const idMatch = rawLogo.match(/[?&]id=([a-zA-Z0-9_-]+)/) || rawLogo.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            const normalizedUrl = idMatch && idMatch[1]
+              ? `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w400`
+              : rawLogo;
+
+            if (/^(https:\/\/|data:image\/)/i.test(normalizedUrl)) {
+              logoBox.className = "mx-auto w-16 h-16 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-xs mb-3 overflow-hidden";
+              logoBox.innerHTML = "";
+              const img = document.createElement("img");
+              img.src = normalizedUrl;
+              img.alt = "Company Logo";
+              img.referrerPolicy = "no-referrer";
+              img.className = "w-full h-full object-contain p-1.5";
+              img.onerror = () => resetLoginLogoToDefault(logoBox);
+              logoBox.appendChild(img);
+            } else {
+              resetLoginLogoToDefault(logoBox);
+            }
+          } else {
+            resetLoginLogoToDefault(logoBox);
+          }
+        }
+      } catch (e) {}
+    }
+
+    async function loadPublicConfig() {
+      try {
+        const res = await callApi({ action: "getPublicConfig" });
+        if (res.status === "success" && res.config) {
+          localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(res.config));
+          hydrateCachedConfig();
+        }
+      } catch (err) {
+        console.warn("Public config sync skipped:", err);
+      }
+    }
+
+    async function verifyExistingSessionOrShowLogin() {
+      const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+      const email = localStorage.getItem(STORAGE_KEYS.EMAIL);
+      const expiresAt = localStorage.getItem(STORAGE_KEYS.EXPIRES);
+
+      if (!token || !email) {
+        clearSessionStorage();
+        showAuthPortal();
+        return;
+      }
+
+      if (expiresAt && new Date(expiresAt).getTime() <= Date.now()) {
+        clearSessionStorage();
+        showAuthPortal();
+        return;
+      }
+
+      try {
+        const res = await callApi({ action: "verifySession", email, token });
+        if (res.status === "success" && res.user) {
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(res.user));
+          window.location.replace(DASHBOARD_PAGE);
+          return;
+        }
+      } catch (err) {
+        console.warn("Session verification failed:", err);
+      }
+
+      clearSessionStorage();
+      showAuthPortal();
+    }
+
+    function showAuthPortal() {
+      document.getElementById("splashScreen").classList.add("hidden");
+      document.getElementById("authView").classList.remove("hidden");
+    }
+
+    function clearSessionStorage() {
+      localStorage.removeItem(STORAGE_KEYS.TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.EMAIL);
+      localStorage.removeItem(STORAGE_KEYS.EXPIRES);
+      localStorage.removeItem(STORAGE_KEYS.USER);
+    }
+
+    // --- TAB 1: LOGIN ---
+    async function handleLoginSubmit(event) {
+      event.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+      const password = document.getElementById("loginPassword").value;
+      const btn = document.getElementById("btnLogin");
+
+      if (!email || !password) return;
+      setButtonLoading(btn, true, "Memverifikasi...");
+
+      try {
+        const res = await callApi({ action: "login", email, password });
+        if (res.status === "success" && res.token && res.user) {
+          localStorage.setItem(STORAGE_KEYS.TOKEN, res.token);
+          localStorage.setItem(STORAGE_KEYS.EMAIL, res.user.email);
+          localStorage.setItem(STORAGE_KEYS.EXPIRES, res.expiresAt || "");
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(res.user));
+          showToast("Berhasil Masuk", "Mengalihkan ke ruang kerja ERP...", "success");
+          window.location.replace(DASHBOARD_PAGE);
+        } else {
+          showToast("Akses Ditolak", res.message || "Email atau kata sandi salah.", "error");
+          setButtonLoading(btn, false, "Masuk ke Sistem");
+        }
+      } catch (err) {
+        showToast("Kesalahan Jaringan", "Gagal terhubung ke server autentikasi.", "error");
+        setButtonLoading(btn, false, "Masuk ke Sistem");
+      }
+    }
+
+    // --- TAB 2: ACTIVATE ACCOUNT ---
+    async function handleCheckEmailSubmit(event) {
+      event.preventDefault();
+      const email = document.getElementById("activateEmail").value.trim().toLowerCase();
+      const btn = document.getElementById("btnCheckEmail");
+      if (!email) return;
+
+      setButtonLoading(btn, true, "Memeriksa...");
+      try {
+        const res = await callApi({ action: "checkEmail", email });
+        if (res.status === "success") {
+          if (res.hasPassword) {
+            showToast("Akun Sudah Aktif", "Akun ini sudah memiliki kata sandi. Silakan masuk.", "info");
+            switchTab("login");
+            document.getElementById("loginEmail").value = email;
+          } else {
+            verifiedActivateEmail = email;
+            document.getElementById("activateUserName").textContent = res.fullName || email;
+            document.getElementById("activateUserRole").textContent = res.role || "Staff";
+            document.getElementById("activateStep1").classList.add("hidden");
+            document.getElementById("activateStep2").classList.remove("hidden");
+          }
+        } else {
+          showToast("Email Tidak Ditemukan", res.message || "Hubungi Administrator.", "error");
+        }
+      } catch (err) {
+        showToast("Kesalahan Jaringan", "Gagal memeriksa email.", "error");
+      } finally {
+        setButtonLoading(btn, false, "Verifikasi Email");
+      }
+    }
+
+    async function handleSetupPasswordSubmit(event) {
+      event.preventDefault();
+      const pw = document.getElementById("activatePassword").value;
+      const confirmPw = document.getElementById("activateConfirmPassword").value;
+      const btn = document.getElementById("btnSetupPassword");
+
+      if (pw.length < 8) {
+        showToast("Validasi Gagal", "Kata sandi minimal 8 karakter.", "warning");
+        return;
+      }
+      if (pw !== confirmPw) {
+        showToast("Validasi Gagal", "Konfirmasi kata sandi tidak cocok.", "warning");
+        return;
+      }
+
+      setButtonLoading(btn, true, "Mengaktifkan...");
+      try {
+        const res = await callApi({ action: "setupPassword", email: verifiedActivateEmail, password: pw });
+        if (res.status === "success") {
+          showToast("Aktivasi Berhasil", res.message, "success");
+          const savedEmail = verifiedActivateEmail;
+          resetActivateForm();
+          switchTab("login");
+          document.getElementById("loginEmail").value = savedEmail;
+        } else {
+          showToast("Aktivasi Gagal", res.message, "error");
+        }
+      } catch (err) {
+        showToast("Kesalahan Jaringan", "Gagal menyimpan kata sandi.", "error");
+      } finally {
+        setButtonLoading(btn, false, "Aktifkan Akun");
+      }
+    }
+
+    function resetActivateForm() {
+      verifiedActivateEmail = "";
+      document.getElementById("activateStep1").reset();
+      document.getElementById("activateStep2").reset();
+      document.getElementById("activateStep2").classList.add("hidden");
+      document.getElementById("activateStep1").classList.remove("hidden");
+    }
+
+    // --- TAB 3: OTP PASSWORD RESET ---
+    async function handleRequestOtpSubmit(event) {
+      event.preventDefault();
+      const email = document.getElementById("resetEmail").value.trim().toLowerCase();
+      const btn = document.getElementById("btnRequestOtp");
+      if (!email) return;
+
+      setButtonLoading(btn, true, "Mengirim OTP...");
+      try {
+        const res = await callApi({ action: "requestReset", email });
+        if (res.status === "success") {
+          verifiedResetEmail = email;
+          document.getElementById("resetEmailDisplay").textContent = email;
+          document.getElementById("resetStep1").classList.add("hidden");
+          document.getElementById("resetStep2").classList.remove("hidden");
+          showToast("OTP Terkirim", res.message, "success");
+        } else {
+          showToast("Permintaan Ditolak", res.message, "error");
+        }
+      } catch (err) {
+        showToast("Kesalahan Jaringan", "Gagal mengirim OTP.", "error");
+      } finally {
+        setButtonLoading(btn, false, "Kirim Kode OTP");
+      }
+    }
+
+    async function handleVerifyResetSubmit(event) {
+      event.preventDefault();
+      const code = document.getElementById("resetOtpCode").value.trim();
+      const newPw = document.getElementById("resetNewPassword").value;
+      const confirmPw = document.getElementById("resetConfirmPassword").value;
+      const btn = document.getElementById("btnVerifyReset");
+
+      if (newPw.length < 8) {
+        showToast("Validasi Gagal", "Kata sandi baru minimal 8 karakter.", "warning");
+        return;
+      }
+      if (newPw !== confirmPw) {
+        showToast("Validasi Gagal", "Konfirmasi kata sandi tidak cocok.", "warning");
+        return;
+      }
+
+      setButtonLoading(btn, true, "Memperbarui...");
+      try {
+        const res = await callApi({
+          action: "verifyReset",
+          email: verifiedResetEmail,
+          code,
+          newPassword: newPw
+        });
+        if (res.status === "success") {
+          showToast("Sandi Diperbarui", res.message, "success");
+          const savedEmail = verifiedResetEmail;
+          resetForgotForm();
+          switchTab("login");
+          document.getElementById("loginEmail").value = savedEmail;
+        } else {
+          showToast("Verifikasi Gagal", res.message, "error");
+        }
+      } catch (err) {
+        showToast("Kesalahan Jaringan", "Gagal mereset kata sandi.", "error");
+      } finally {
+        setButtonLoading(btn, false, "Simpan Kata Sandi");
+      }
+    }
+
+    function resetForgotForm() {
+      verifiedResetEmail = "";
+      document.getElementById("resetStep1").reset();
+      document.getElementById("resetStep2").reset();
+      document.getElementById("resetStep2").classList.add("hidden");
+      document.getElementById("resetStep1").classList.remove("hidden");
+    }
+
+    // --- UI HELPERS ---
+    function switchTab(tabId) {
+      ["login", "activate", "reset"].forEach(id => {
+        document.getElementById("form-" + id).classList.add("hidden");
+        document.getElementById("tab-" + id).className = "py-3 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition";
+      });
+      document.getElementById("form-" + tabId).classList.remove("hidden");
+      document.getElementById("tab-" + tabId).className = "py-3 text-center border-b-2 border-blue-600 text-blue-600 bg-white transition";
+    }
+
+    function togglePasswordVisibility(inputId, btnElement) {
+      const input = document.getElementById(inputId);
+      const openEye = btnElement.querySelector(".eye-open");
+      const closedEye = btnElement.querySelector(".eye-closed");
+      if (input.type === "password") {
+        input.type = "text";
+        openEye.classList.add("hidden");
+        closedEye.classList.remove("hidden");
+      } else {
+        input.type = "password";
+        openEye.classList.remove("hidden");
+        closedEye.classList.add("hidden");
+      }
+    }
+
+    function setButtonLoading(btn, isLoading, label) {
+      btn.disabled = isLoading;
+      btn.textContent = label;
+    }
+
+    function showToast(title, message, type = "info") {
+      const container = document.getElementById("toastContainer");
+      const icon = document.getElementById("toastIcon");
+      const bar = document.getElementById("toastBar");
+
+      const styles = {
+        success: { badge: "bg-emerald-100 text-emerald-700", symbol: "✓", bar: "bg-emerald-600" },
+        error: { badge: "bg-rose-100 text-rose-700", symbol: "!", bar: "bg-rose-600" },
+        warning: { badge: "bg-amber-100 text-amber-700", symbol: "!", bar: "bg-amber-500" },
+        info: { badge: "bg-blue-100 text-blue-700", symbol: "i", bar: "bg-blue-600" }
+      };
+      const cfg = styles[type] || styles.info;
+
+      icon.className = "w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold " + cfg.badge;
+      icon.textContent = cfg.symbol;
+      bar.className = "h-full toast-progress " + cfg.bar;
+
+      document.getElementById("toastTitle").textContent = title;
+      document.getElementById("toastMessage").textContent = message;
+
+      container.classList.remove("opacity-0", "-translate-y-3", "pointer-events-none");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(hideToast, 3200);
+    }
+
+    function hideToast() {
+      document.getElementById("toastContainer").classList.add("opacity-0", "-translate-y-3", "pointer-events-none");
+    }
+  </script>
+</body>
+</html>
