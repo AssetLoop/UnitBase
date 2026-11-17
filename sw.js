@@ -1,13 +1,23 @@
-const CACHE_NAME = "helmy-machinery-shell-v1";
+const CACHE_NAME = "helmy-machinery-shell-v2";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./dashboard.html",
+  "./manifest.json",
+  "./logo.png"
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS))
+    caches.open(CACHE_NAME).then(async (cache) => {
+      for (const asset of SHELL_ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch (err) {
+          console.warn("Skipped precaching:", asset, err);
+        }
+      }
+    })
   );
   self.skipWaiting();
 });
